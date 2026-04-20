@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Sun, CloudSun, Check, AlertTriangle } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function CheckinTab({ user, showToast }) {
@@ -40,7 +41,7 @@ export default function CheckinTab({ user, showToast }) {
     setSavingId(b.booking_id);
     try {
       const res = await api.checkIn({ booking_id: b.booking_id, actual_qty: Number(f.actual_qty), remark: f.remark });
-      showToast(res.diff === 0 ? 'ตรวจรับสำเร็จ ✓' : `ตรวจรับแล้ว ส่วนต่าง ${res.diff > 0 ? '+' : ''}${res.diff}`,
+      showToast(res.diff === 0 ? 'ตรวจรับสำเร็จ' : `ตรวจรับแล้ว ส่วนต่าง ${res.diff > 0 ? '+' : ''}${res.diff}`,
                 res.diff === 0 ? 'success' : 'info');
       await load();
     } catch (e) { showToast(e.message, 'error'); }
@@ -76,7 +77,13 @@ export default function CheckinTab({ user, showToast }) {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <p className="font-semibold text-gray-800">{b.supplier_name}</p>
-                <p className="text-sm text-gray-500">{b.period === 'morning' ? '☀️ เช้า' : '🌤️ บ่าย'} · จอง {Number(b.qty).toLocaleString()} ชิ้น</p>
+                <p className="text-sm text-gray-500 inline-flex items-center gap-1">
+                  {b.period === 'morning'
+                    ? <><Sun size={14} className="text-amber-500" /> เช้า</>
+                    : <><CloudSun size={14} className="text-sky-500" /> บ่าย</>}
+                  <span className="mx-1">·</span>
+                  จอง {Number(b.qty).toLocaleString()} ชิ้น
+                </p>
               </div>
               <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">รอตรวจรับ</span>
             </div>
@@ -92,8 +99,11 @@ export default function CheckinTab({ user, showToast }) {
                   className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
               </div>
               {f.diff !== null && (
-                <p className={`text-sm font-medium ${f.diff === 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  ส่วนต่าง: {f.diff > 0 ? '+' : ''}{f.diff} {f.diff === 0 ? '✓ ยอดตรง' : '⚠️ ยอดไม่ตรง'}
+                <p className={`text-sm font-medium inline-flex items-center gap-1 ${f.diff === 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  ส่วนต่าง: {f.diff > 0 ? '+' : ''}{f.diff}
+                  {f.diff === 0
+                    ? <><Check size={15} /> ยอดตรง</>
+                    : <><AlertTriangle size={15} /> ยอดไม่ตรง</>}
                 </p>
               )}
               {f.diff !== null && f.diff !== 0 && (
@@ -127,8 +137,10 @@ export default function CheckinTab({ user, showToast }) {
                     {b.period === 'morning' ? 'เช้า' : 'บ่าย'} · จอง {b.qty} / รับ {b.warehouse?.actual_qty ?? '-'}
                   </p>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${b.status === 'received' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                  {b.status === 'received' ? '✓ ตรง' : '⚠️ ไม่ตรง'}
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${b.status === 'received' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {b.status === 'received'
+                    ? <><Check size={13} /> ตรง</>
+                    : <><AlertTriangle size={13} /> ไม่ตรง</>}
                 </span>
               </div>
             ))}

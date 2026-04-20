@@ -2,32 +2,48 @@ import { readSheet, updateRow, appendRow } from '@/lib/sheets';
 import { getUser } from '@/lib/auth';
 import { getQuotaForDate } from '@/lib/quota';
 
+const DAYS_TH = ['วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์','วันอาทิตย์'];
+
 export default async function handler(req, res) {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
-  // GET /api/quota?date=YYYY-MM-DD
+  // GET /api/quota?date=YYYY-MM-DD   → summary for a specific date
+  // GET /api/quota                   → full list of all days (for QuotaTab)
   if (req.method === 'GET') {
     const { date } = req.query;
-    if (!date) {
-      const rows = await readSheet('Quota');
-      return res.json(rows);
+    if (date) {
+      const quota = await getQuotaForDate(date);
+      return res.json(quota);
     }
-    const quota = await getQuotaForDate(date);
-    return res.json(quota);
+    const rows = await readSheet('Quota');
+    const map = new Map(rows.filter(r => r.Date).map(r => [r.Date, r]));
+    const list = DAYS_TH.map(d => {
+      const r = map.get(d);
+      return {
+        ID: r?.ID || '',
+        Date: d,
+        daily_quota_full: Number(r?.daily_quota_full) || 0,
+      };
+    });
+    return res.json(list);
   }
 
-  // PUT /api/quota  { day_of_week, quota_morning, quota_afternoon }
+  // PUT /api/quota  { Date, daily_quota_full }
   if (req.method === 'PUT') {
     if (user.role !== 'purchasing') return res.status(403).json({ message: 'Forbidden' });
-    const { day_of_week, quota_morning, quota_afternoon } = req.body;
+    const { Date: day, daily_quota_full } = req.body;
+    if (!day || !DAYS_TH.includes(day)) return res.status(400).json({ message: 'ระบุชื่อวัน (ภาษาไทย) ให้ถูกต้อง' });
+    const qty = Number(daily_quota_full);
+    if (!Number.isFinite(qty) || qty < 0) return res.status(400).json({ message: 'ระบุจำนวนเป็นตัวเลขไม่ติดลบ' });
+
     const rows = await readSheet('Quota');
-    const idx = rows.findIndex(r => r.day_of_week === day_of_week);
+    const idx = rows.findIndex(r => r.Date === day);
     if (idx >= 0) {
-      // row in sheet = idx + 2 (1 header + 1-based)
-      await updateRow('Quota', idx + 2, [day_of_week, Number(quota_morning), Number(quota_afternoon)]);
+      const id = rows[idx].ID || ('q-' + Date.now());
+      await updateRow('Quota', idx + 2, [id, qty, day]);
     } else {
-      await appendRow('Quota', [day_of_week, Number(quota_morning), Number(quota_afternoon)]);
+      await appendRow('Quota', ['q-' + Date.now(), qty, day]);
     }
     return res.json({ ok: true });
   }

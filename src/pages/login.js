@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { Package, Delete } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function Login() {
@@ -45,7 +46,7 @@ export default function Login() {
   }
 
   function padPress(n) {
-    if (n === '⌫') {
+    if (n === 'back') {
       const idx = [...pin].reverse().findIndex(d => d !== '');
       if (idx >= 0) {
         const pos = 3 - idx;
@@ -59,13 +60,17 @@ export default function Login() {
     if (next.every(d => d !== '')) doLogin(next);
   }
 
+  const padKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, 'back'];
+
   return (
     <>
       <Head><title>เข้าสู่ระบบ — จองคิวสินค้า</title></Head>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
           <div className="text-center mb-6">
-            <div className="text-5xl mb-3">📦</div>
+            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center">
+              <Package size={36} strokeWidth={1.8} />
+            </div>
             <h1 className="text-2xl font-bold text-gray-800">ระบบจองคิวสินค้า</h1>
             <p className="text-gray-500 text-sm mt-1">กรอก PIN 4 หลักเพื่อเข้าใช้งาน</p>
           </div>
@@ -88,14 +93,14 @@ export default function Login() {
 
           {/* PIN pad */}
           <div className="grid grid-cols-3 gap-2 mt-2">
-            {[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map((n, i) => (
+            {padKeys.map((n, i) => (
               <button key={i} onClick={() => n !== '' && padPress(n)}
-                className={`py-4 rounded-xl text-lg font-semibold transition ${
+                className={`py-4 rounded-xl text-lg font-semibold transition flex items-center justify-center ${
                   n === '' ? 'invisible' :
-                  n === '⌫' ? 'bg-red-50 text-red-500 hover:bg-red-100' :
+                  n === 'back' ? 'bg-red-50 text-red-500 hover:bg-red-100' :
                   'bg-gray-50 text-gray-700 hover:bg-gray-100 active:bg-gray-200'
                 }`}>
-                {n}
+                {n === 'back' ? <Delete size={22} /> : n}
               </button>
             ))}
           </div>

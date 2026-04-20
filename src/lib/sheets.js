@@ -1,14 +1,32 @@
 import { google } from 'googleapis';
+import fs from 'fs';
+import path from 'path';
 
 // ============================================================
 //  Google Sheets client
 // ============================================================
+function loadCredentials() {
+  // 1) ถ้ามีไฟล์ JSON ใน secrets/ ให้ใช้ไฟล์นั้นก่อน
+  const jsonPath = path.join(process.cwd(), 'secrets', 'service-account.json');
+  if (fs.existsSync(jsonPath)) {
+    const key = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (key.type !== 'service_account') {
+      throw new Error(
+        'secrets/service-account.json ไม่ใช่ Service Account key (ต้องมี "type": "service_account")'
+      );
+    }
+    return { client_email: key.client_email, private_key: key.private_key };
+  }
+  // 2) Fallback: ใช้ env vars (เหมาะกับ deploy บน Vercel)
+  return {
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  };
+}
+
 function getAuth() {
   return new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
+    credentials: loadCredentials(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 }
@@ -82,7 +100,7 @@ export async function setupSheets() {
 
   const configs = [
     { name: 'Users',          headers: ['user_id','username','pin','role','active'] },
-    { name: 'Quota',          headers: ['day_of_week','quota_morning','quota_afternoon'] },
+    { name: 'Quota',          headers: ['ID','daily_quota_full','Date'] },
     { name: 'Suppliers',      headers: ['supplier_id','supplier_name','contact','active'] },
     { name: 'Bookings',       headers: ['booking_id','date','supplier_id','supplier_name','qty','period','user_id','username','status','created_at','remark'] },
     { name: 'Warehouse_Check',headers: ['wh_id','booking_id','date','supplier_name','booked_qty','actual_qty','diff','remark','wh_user','checked_at'] },
@@ -113,12 +131,17 @@ export async function setupSheets() {
     }
   }
 
-  // Seed default quota
+  // Seed default quota (full-day total per day, Thai day names)
   const quota = await readSheet('Quota');
   if (quota.length === 0) {
     const days = [
-      ['Monday',500,500],['Tuesday',500,500],['Wednesday',500,500],
-      ['Thursday',500,500],['Friday',500,500],['Saturday',300,200],
+      ['q-mon', 1000, 'วันจันทร์'],
+      ['q-tue', 1000, 'วันอังคาร'],
+      ['q-wed', 1000, 'วันพุธ'],
+      ['q-thu', 1000, 'วันพฤหัสบดี'],
+      ['q-fri', 1000, 'วันศุกร์'],
+      ['q-sat',  500, 'วันเสาร์'],
+      ['q-sun',    0, 'วันอาทิตย์'],
     ];
     for (const d of days) await appendRow('Quota', d);
   }

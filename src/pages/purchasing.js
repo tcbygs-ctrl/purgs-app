@@ -25,7 +25,7 @@ export default function Purchasing() {
   return (
     <>
       <Head><title>จัดซื้อ — ระบบจองคิวสินค้า</title></Head>
-      <Layout user={user} activeTab={tab} onTabChange={setTab} accent="blue">
+      <Layout user={user} onUserUpdate={setUser} activeTab={tab} onTabChange={setTab} accent="blue">
         {showToast => (
           <>
             {tab === 'booking'   && <BookingTab   user={user} showToast={showToast} />}

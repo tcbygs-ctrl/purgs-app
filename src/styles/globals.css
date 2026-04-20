@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  font-family: 'Sarabun', ui-sans-serif, system-ui, sans-serif;
+}
+
 @media print {
   nav, button, select, input[type="date"], .no-print { display: none !important; }
 }

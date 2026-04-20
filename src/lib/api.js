@@ -35,4 +35,8 @@ export const api = {
   getDashboard:   (date)                    => req('GET',  `/api/warehouse/dashboard?date=${date}`),
   checkIn:        (data)                    => req('POST', '/api/warehouse/checkin', data),
   getReport:      (params)                  => req('GET',  `/api/reports?${new URLSearchParams(params)}`),
+  getReportDashboard: (period, date)        => req('GET',  `/api/reports/dashboard?period=${period}&date=${date}`),
+  getMe:          ()                        => req('GET',  '/api/users/me'),
+  updateMe:       (data)                    => req('PUT',  '/api/users/me', data),
+  changePin:      (current_pin, new_pin)    => req('PUT',  '/api/users/me/pin', { current_pin, new_pin }),
 };

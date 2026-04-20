@@ -24,7 +24,7 @@ export default function Warehouse() {
   return (
     <>
       <Head><title>คลังสินค้า — ระบบจองคิวสินค้า</title></Head>
-      <Layout user={user} activeTab={tab} onTabChange={setTab} accent="orange">
+      <Layout user={user} onUserUpdate={setUser} activeTab={tab} onTabChange={setTab} accent="orange">
         {showToast => (
           <>
             {tab === 'dashboard' && <DashboardTab user={user} showToast={showToast} />}

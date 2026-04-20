@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { RefreshCw, Sun, CloudSun } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const STATUS_COLOR = { pending: 'bg-yellow-100 text-yellow-700', received: 'bg-green-100 text-green-700', received_diff: 'bg-orange-100 text-orange-700' };
@@ -36,11 +37,13 @@ export default function DashboardTab({ showToast }) {
     { label: 'ยอดจอง (ชิ้น)', value: items.reduce((s, b) => s + (Number(b.qty) || 0), 0).toLocaleString(), color: 'text-gray-700' },
   ];
 
-  function PeriodTable({ list, title }) {
+  function PeriodTable({ list, title, Icon, iconColor }) {
     if (!list.length) return null;
     return (
       <div className="mb-4">
-        <h3 className="font-semibold text-gray-600 mb-2 px-1">{title}</h3>
+        <h3 className="font-semibold text-gray-600 mb-2 px-1 inline-flex items-center gap-1.5">
+          <Icon size={16} className={iconColor} /> {title}
+        </h3>
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
@@ -88,8 +91,9 @@ export default function DashboardTab({ showToast }) {
             className="border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
         </div>
         <button onClick={load} disabled={loading}
-          className="mt-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm">
-          {loading ? '...' : '🔄 รีเฟรช'}
+          className="mt-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm inline-flex items-center gap-1.5">
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
         </button>
         <span className="ml-auto text-xs text-gray-400">อัปเดต: {lastUpdate}</span>
       </div>
@@ -110,8 +114,8 @@ export default function DashboardTab({ showToast }) {
         <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400">ไม่มีรายการวันนี้</div>
       ) : (
         <>
-          <PeriodTable list={morning} title="☀️ เช้า" />
-          <PeriodTable list={afternoon} title="🌤️ บ่าย" />
+          <PeriodTable list={morning}   title="เช้า" Icon={Sun}      iconColor="text-amber-500" />
+          <PeriodTable list={afternoon} title="บ่าย" Icon={CloudSun} iconColor="text-sky-500" />
         </>
       )}
     </div>
